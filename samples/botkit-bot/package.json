@@ -1,0 +1,20 @@
+{
+  "name": "botkit-botkit-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "start:botium": "node -r './botium-proxy.js' bot.js"
+  },
+  "dependencies": {
+    "botbuilder-adapter-facebook": "^1.0.5",
+    "botbuilder-storage-mongodb": "^0.9.5",
+    "botkit": "^4.5.0",
+    "botkit-plugin-cms": "^1.0.2",
+    "dotenv": "^7.0.0"
+  },
+  "devDependencies": {
+    "nock": "^11.4.0"
+  }
+}

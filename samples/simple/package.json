@@ -1,0 +1,19 @@
+{
+  "name": "techdemo",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "mocha spec"
+  },
+  "botium": {
+    "convodirs": [
+      "spec\\convo"
+    ],
+    "expandConvos": true,
+    "expandUtterancesToConvos": false
+  },
+  "devDependencies": {
+    "botium-bindings": "latest",
+    "botium-connector-fbwebhook": "../../",
+    "mocha": "^6.2.1"
+  }
+}

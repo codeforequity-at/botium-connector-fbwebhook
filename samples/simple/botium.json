@@ -1,0 +1,11 @@
+{
+  "botium": {
+    "Capabilities": {
+      "PROJECTNAME": "Botium Project Facebook",
+      "CONTAINERMODE": "fbwebhook",
+      "FBWEBHOOK_WEBHOOKURL": "http://127.0.0.1:3000/api/messages",
+      "FBWEBHOOK_PAGEID": "123456",
+      "FBWEBHOOK_APPSECRET": "mysecret"
+    }
+  }
+}
