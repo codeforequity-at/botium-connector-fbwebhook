@@ -1,6 +1,6 @@
 {
   "name": "botium-connector-fbwebhook",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Botium Connector for Facebook Webhooks",
   "main": "dist/botium-connector-fbwebhook-cjs.js",
   "module": "dist/botium-connector-fbwebhook-es.js",

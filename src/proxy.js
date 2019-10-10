@@ -1,4 +1,3 @@
-const util = require('util')
 const express = require('express')
 const Redis = require('ioredis')
 const bodyParser = require('body-parser')
@@ -23,7 +22,7 @@ const processEvent = async (event, { redis, ...rest }) => {
 const setupEndpoints = ({ app, endpoint, redisurl, ...rest }) => {
   const redis = new Redis(redisurl)
   redis.on('connect', () => {
-    debug(`Redis connected to ${util.inspect(redisurl || 'default')}`)
+    debug(`Redis connected to ${JSON.stringify(redisurl || 'default')}`)
   })
   const messagesEndpoint = (endpoint || '/') + '*/me/messages'
   const catchAllEndpoint = (endpoint || '/') + '*'

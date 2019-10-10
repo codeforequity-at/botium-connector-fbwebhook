@@ -1,4 +1,3 @@
-const util = require('util')
 const Redis = require('ioredis')
 const _ = require('lodash')
 const randomize = require('randomatic')
@@ -87,7 +86,7 @@ class BotiumConnectorFbWebhook {
     return new Promise((resolve, reject) => {
       this.redis = new Redis(this.caps[Capabilities.FBWEBHOOK_REDISURL])
       this.redis.on('connect', () => {
-        debug(`Redis connected to ${util.inspect(this.caps[Capabilities.FBWEBHOOK_REDISURL] || 'default')}`)
+        debug(`Redis connected to ${JSON.stringify(this.caps[Capabilities.FBWEBHOOK_REDISURL] || 'default')}`)
         resolve()
       })
       this.redis.on('message', (channel, event) => {
@@ -108,8 +107,8 @@ class BotiumConnectorFbWebhook {
 
           botMsg.messageText = event.body.message.text
 
-          debug(`Received a message to queue ${channel}: ${util.inspect(botMsg)}`)
-          setTimeout(() => this.queueBotSays(botMsg), 0)
+          debug(`Received a message to queue ${channel}: ${JSON.stringify(botMsg)}`)
+          setTimeout(() => this.queueBotSays(botMsg), 100)
 
           this._sendToBot({
             sourceData: {
@@ -192,7 +191,7 @@ class BotiumConnectorFbWebhook {
     return new Promise((resolve, reject) => {
       this.redis.subscribe(this.facebookUserId, (err, count) => {
         if (err) {
-          return reject(new Error(`Redis failed to subscribe channel ${this.facebookUserId}: ${util.inspect(err)}`))
+          return reject(new Error(`Redis failed to subscribe channel ${this.facebookUserId}: ${err}`))
         }
         debug(`Redis subscribed to ${count} channels. Listening for updates on the ${this.facebookUserId} channel.`)
         resolve()
@@ -204,7 +203,7 @@ class BotiumConnectorFbWebhook {
     return new Promise((resolve, reject) => {
       this.redis.unsubscribe(this.facebookUserId, (err) => {
         if (err) {
-          return reject(new Error(`Redis failed to unsubscribe channel ${this.facebookUserId}: ${util.inspect(err)}`))
+          return reject(new Error(`Redis failed to unsubscribe channel ${this.facebookUserId}: ${err}`))
         }
         debug(`Redis unsubscribed from ${this.facebookUserId} channel.`)
         resolve()
