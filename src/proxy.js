@@ -28,8 +28,6 @@ const setupEndpoints = ({ app, endpoint, redisurl, ...rest }) => {
   const catchAllEndpoint = (endpoint || '/') + '*'
 
   app.post(messagesEndpoint, (req, res) => {
-    console.log(req.url)
-    console.log(req.body)
     if (req.body) {
       const response = {
         recipient_id: req.body.recipient && req.body.recipient.id,
