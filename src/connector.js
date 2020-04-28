@@ -107,6 +107,26 @@ class BotiumConnectorFbWebhook {
 
           botMsg.messageText = event.body.message.text
 
+          let attachmentMsg = event.body.message.attachment
+
+          if(attachmentMsg) {
+            if(attachmentMsg.type == 'template') {
+              botMsg.cards = [] 
+              attachmentMsg.payload.elements.map(element => {
+                let card = {
+                  text: element.title,
+                  subtext: element.subtitle,
+                  image: element.image_url && {
+                    mediaUri: element.image_url
+                  },
+                  buttons: element.buttons && element.buttons.map(b => ({text: b.title, payload: b.payload}))
+                }
+
+                botMsg.cards.push(card)
+              })
+            }
+          }
+
           debug(`Received a message to queue ${channel}: ${JSON.stringify(botMsg)}`)
           setTimeout(() => this.queueBotSays(botMsg), 100)
 
@@ -165,7 +185,9 @@ class BotiumConnectorFbWebhook {
     const requestOptions = {
       uri: this.caps[Capabilities.FBWEBHOOK_WEBHOOKURL],
       method: 'POST',
-      headers: {},
+      headers: {
+        'Botium': true
+      },
       body: msgContainer,
       json: true,
       timeout: this.caps[Capabilities.FBWEBHOOK_TIMEOUT]
