@@ -104,26 +104,45 @@ class BotiumConnectorFbWebhook {
           }
 
           const botMsg = { sender: 'bot', sourceData: event }
+          const fbMessage = event.body.message
 
-          botMsg.messageText = event.body.message.text
-
-          let attachmentMsg = event.body.message.attachment
-
-          if(attachmentMsg) {
-            if(attachmentMsg.type == 'template') {
-              botMsg.cards = [] 
-              attachmentMsg.payload.elements.map(element => {
-                let card = {
-                  text: element.title,
-                  subtext: element.subtitle,
-                  image: element.image_url && {
-                    mediaUri: element.image_url
-                  },
-                  buttons: element.buttons && element.buttons.map(b => ({text: b.title, payload: b.payload}))
-                }
-
-                botMsg.cards.push(card)
-              })
+          if (fbMessage.text) {
+            botMsg.messageText = event.body.message.text
+          }
+          if (fbMessage.quick_reply) {
+            botMsg.buttons = [{
+              text: fbMessage.text,
+              payload: fbMessage.quick_reply.payload
+            }]
+          }
+          if (fbMessage.attachment) {
+            const attachment = fbMessage.attachment.payload
+            switch (attachment.template_type) {
+              case 'generic': {
+                botMsg.cards = []
+                attachment.elements.map(element => {
+                  botMsg.cards.push({
+                    text: element.title,
+                    subtext: element.subtitle,
+                    image: element.image_url && {
+                      mediaUri: element.image_url
+                    },
+                    buttons: element.buttons && element.buttons.map(button => ({text: button.title, payload: button.payload}))
+                  })
+                })
+              }
+              case 'button': {
+                botMsg.buttons = []
+                attachment.buttons.map(button => {
+                  botMsg.buttons.push({
+                    text: button.title,
+                    payload: button.payload
+                  })
+                })
+              }
+              default:
+                // Types of attachment not supported list, media, receipt, airline_boardingpass
+                debug(`WARNING: recieved unsupported message from ${channel}, ignoring ${event}`)
             }
           }
 
