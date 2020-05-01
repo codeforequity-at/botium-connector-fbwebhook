@@ -13,7 +13,7 @@ const Capabilities = {
   FBWEBHOOK_APPSECRET: 'FBWEBHOOK_APPSECRET'
 }
 const Defaults = {
-  [Capabilities.FBWEBHOOK_PAGEID]: "123456",
+  [Capabilities.FBWEBHOOK_PAGEID]: '123456',
   [Capabilities.FBWEBHOOK_TIMEOUT]: 10000
 }
 
@@ -111,7 +111,7 @@ class BotiumConnectorFbWebhook {
               botMsg.messageText = event.body.message.text
             }
             if (fbMessage.quick_replies) {
-              botMsg.buttons = botMsg.buttons || [];
+              botMsg.buttons = botMsg.buttons || []
               fbMessage.quick_replies.map(qr => {
                 botMsg.buttons.push({
                   text: qr.title,
@@ -122,7 +122,7 @@ class BotiumConnectorFbWebhook {
             if (fbMessage.attachment) {
               const attachment = fbMessage.attachment.payload
               switch (attachment.template_type) {
-                case 'generic': {
+                case 'generic':
                   botMsg.cards = botMsg.cards || []
                   attachment.elements.map(element => {
                     botMsg.cards.push({
@@ -131,12 +131,11 @@ class BotiumConnectorFbWebhook {
                       image: element.image_url && {
                         mediaUri: element.image_url
                       },
-                      buttons: element.buttons && element.buttons.map(button => ({text: button.title, payload: button.payload}))
+                      buttons: element.buttons && element.buttons.map(button => ({ text: button.title, payload: button.payload }))
                     })
                   })
-                }
-                break
-                case 'button': {
+                  break
+                case 'button':
                   botMsg.messageText = attachment.text
                   botMsg.buttons = botMsg.buttons || []
                   attachment.buttons.map(button => {
@@ -145,8 +144,7 @@ class BotiumConnectorFbWebhook {
                       payload: button.payload
                     })
                   })
-                }
-                break
+                  break
                 default:
                   // Types of attachment not supported list, media, receipt, airline_boardingpass
                   debug(`WARNING: recieved unsupported message from ${channel}, ignoring ${event}`)
@@ -214,9 +212,7 @@ class BotiumConnectorFbWebhook {
     const requestOptions = {
       uri: this.caps[Capabilities.FBWEBHOOK_WEBHOOKURL],
       method: 'POST',
-      headers: {
-        'Botium': true
-      },
+      headers: { Botium: true },
       body: msgContainer,
       json: true,
       timeout: this.caps[Capabilities.FBWEBHOOK_TIMEOUT]

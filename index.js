@@ -1,8 +1,9 @@
 const PluginClass = require('./src/connector')
+const ProxyClass = require('./src/proxy')
 
 module.exports = {
   PluginVersion: 1,
   PluginClass: PluginClass
 }
 
-module.exports.proxy = require('./src/plugin')
+module.exports.proxy = ProxyClass
