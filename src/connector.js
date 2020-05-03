@@ -13,7 +13,7 @@ const Capabilities = {
   FBWEBHOOK_APPSECRET: 'FBWEBHOOK_APPSECRET'
 }
 const Defaults = {
-  [Capabilities.FBWEBHOOK_PAGEID]: 123456,
+  [Capabilities.FBWEBHOOK_PAGEID]: '123456',
   [Capabilities.FBWEBHOOK_TIMEOUT]: 10000
 }
 
@@ -104,11 +104,58 @@ class BotiumConnectorFbWebhook {
           }
 
           const botMsg = { sender: 'bot', sourceData: event }
+          const fbMessage = event.body.message
 
-          botMsg.messageText = event.body.message.text
+          if (fbMessage) {
+            if (fbMessage.text) {
+              botMsg.messageText = event.body.message.text
+            }
+            if (fbMessage.quick_replies) {
+              botMsg.buttons = botMsg.buttons || []
+              fbMessage.quick_replies.map(qr => {
+                botMsg.buttons.push({
+                  text: qr.title,
+                  payload: qr.payload
+                })
+              })
+            }
+            if (fbMessage.attachment) {
+              const attachment = fbMessage.attachment.payload
+              switch (attachment.template_type) {
+                case 'generic':
+                  botMsg.cards = botMsg.cards || []
+                  attachment.elements.map(element => {
+                    botMsg.cards.push({
+                      text: element.title,
+                      subtext: element.subtitle,
+                      image: element.image_url && {
+                        mediaUri: element.image_url
+                      },
+                      buttons: element.buttons && element.buttons.map(button => ({ text: button.title, payload: button.payload }))
+                    })
+                  })
+                  break
+                case 'button':
+                  botMsg.messageText = attachment.text
+                  botMsg.buttons = botMsg.buttons || []
+                  attachment.buttons.map(button => {
+                    botMsg.buttons.push({
+                      text: button.title,
+                      payload: button.payload
+                    })
+                  })
+                  break
+                default:
+                  // Types of attachment not supported list, media, receipt, airline_boardingpass
+                  debug(`WARNING: recieved unsupported message from ${channel}, ignoring ${event}`)
+              }
+            }
 
-          debug(`Received a message to queue ${channel}: ${JSON.stringify(botMsg)}`)
-          setTimeout(() => this.queueBotSays(botMsg), 100)
+            debug(`Received a message to queue ${channel}: ${JSON.stringify(botMsg)}`)
+            setTimeout(() => this.queueBotSays(botMsg), 100)
+          } else {
+            debug(`WARNING: recieved non message fb event from ${channel}, ignoring ${event}`)
+          }
 
           this._sendToBot({
             sourceData: {
@@ -165,7 +212,7 @@ class BotiumConnectorFbWebhook {
     const requestOptions = {
       uri: this.caps[Capabilities.FBWEBHOOK_WEBHOOKURL],
       method: 'POST',
-      headers: {},
+      headers: { Botium: true },
       body: msgContainer,
       json: true,
       timeout: this.caps[Capabilities.FBWEBHOOK_TIMEOUT]
