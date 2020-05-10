@@ -135,4 +135,5 @@ Or a Redis options object - see [here](https://github.com/luin/ioredis#connect-t
 
 ## Open Issues and Restrictions
 
+* Currently only plain text, quick replies, buttons and cards are supported
 * Currently only individual receivers supported
