@@ -24,7 +24,7 @@ const getTs = () => {
 class BotiumConnectorFbWebhook {
   constructor ({ queueBotSays, caps }) {
     this.queueBotSays = queueBotSays
-    this.caps = caps
+    this.caps = { ...Defaults, ...caps }
     this.redis = null
     this.facebookUserId = null
   }
@@ -55,6 +55,7 @@ class BotiumConnectorFbWebhook {
     const msgData = {}
     if (msg.buttons && msg.buttons.length > 0 && (msg.buttons[0].text || msg.buttons[0].payload)) {
       msgData.sourceData = {
+        recipient: { id: msg.BOTKIT_TO_ID },
         postback: {
           title: msg.buttons[0].text,
           payload: msg.buttons[0].payload || msg.buttons[0].text
@@ -62,6 +63,7 @@ class BotiumConnectorFbWebhook {
       }
     } else {
       msgData.sourceData = {
+        recipient: { id: msg.BOTKIT_TO_ID },
         message: {
           text: msg.messageText
         }
