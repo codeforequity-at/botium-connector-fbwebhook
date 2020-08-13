@@ -1,0 +1,17 @@
+update_page
+
+#begin
+UPDATE_CUSTOM FBWEBHOOK_PAGEID|77777777
+UPDATE_CUSTOM FBWEBHOOK_USERID|66666666
+
+#me
+Reserve a car pls
+
+#bot
+Echo: Reserve a car pls
+
+#me
+Reserve a car pls
+
+#bot
+Echo: Reserve a car pls

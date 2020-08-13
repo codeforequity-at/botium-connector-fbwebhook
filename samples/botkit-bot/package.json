@@ -5,16 +5,16 @@
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js",
-    "start:botium": "node -r './botium-proxy.js' bot.js"
+    "start:botium": "FACEBOOK_VERIFY_TOKEN=myverifytoken FACEBOOK_ACCESS_TOKEN=myaccesstoken FACEBOOK_APP_SECRET=mysecret node -r './botium-proxy.js' bot.js"
   },
   "dependencies": {
-    "botbuilder-adapter-facebook": "^1.0.5",
+    "botbuilder-adapter-facebook": "^1.0.10",
     "botbuilder-storage-mongodb": "^0.9.5",
-    "botkit": "^4.5.0",
-    "botkit-plugin-cms": "^1.0.2",
-    "dotenv": "^7.0.0"
+    "botkit": "^4.9.0",
+    "botkit-plugin-cms": "^1.0.3",
+    "dotenv": "^8.2.0"
   },
   "devDependencies": {
-    "nock": "^11.4.0"
+    "nock": "^13.0.4"
   }
 }

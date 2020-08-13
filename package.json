@@ -1,6 +1,6 @@
 {
   "name": "botium-connector-fbwebhook",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Botium Connector for Facebook Webhooks",
   "main": "dist/botium-connector-fbwebhook-cjs.js",
   "module": "dist/botium-connector-fbwebhook-es.js",
@@ -20,7 +20,7 @@
   "bugs": {
     "url": "https://github.com/codeforequity-at/botium-core/issues"
   },
-  "homepage": "https://github.com/codeforequity-at/botium-core",
+  "homepage": "https://www.botium.ai",
   "devDependencies": {
     "@babel/core": "^7.6.2",
     "@babel/node": "^7.6.2",
@@ -41,15 +41,14 @@
   "dependencies": {
     "@babel/runtime": "^7.6.2",
     "body-parser": "^1.19.0",
-    "crypto": "^1.0.1",
     "debug": "^4.1.1",
     "express": "^4.17.1",
-    "ioredis": "^4.14.1",
-    "lodash": "^4.17.15",
+    "ioredis": "^4.17.3",
+    "lodash": "^4.17.19",
     "randomatic": "^3.1.1",
-    "request": "^2.88.0",
-    "request-promise-native": "^1.0.7",
-    "uuid": "^3.3.3",
-    "yargs": "^14.2.0"
+    "request": "^2.88.2",
+    "request-promise-native": "^1.0.9",
+    "uuid": "^8.3.0",
+    "yargs": "^15.4.1"
   }
 }

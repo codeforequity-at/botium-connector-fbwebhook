@@ -102,7 +102,7 @@ __Important: The Botium Facebook Messenger Platform emulator has to be running w
 
 The folder _samples/botkit-bot_ is an example for a simple Facebook Webhook chatbot - it is one of the samples of [Botkit](https://github.com/howdyai/botkit). Start the webhook:
 
-    > cd samples/botkit-bo && npm install && npm start:botium
+    > cd samples/botkit-bot && npm install && npm run start:botium
 
 Afterwards, start the Botium Facebook Messenger Platform emulator:
 
@@ -124,6 +124,20 @@ Webhook timeout in milliseconds (default: 10000 = 10 seconds)
 
 ### FBWEBHOOK_PAGEID
 If your webhook expects a special Facebook Page ID to process messages, you can add one here (default: 123456)
+
+The Facebook Page ID can also be set in the test case spec itself:
+
+    #begin
+    UPDATE_CUSTOM FBWEBHOOK_PAGEID|77777777
+
+### FBWEBHOOK_USERID
+If your webhook expects a special Facebook User ID to process messages, you can add one here (default: 10 random digits)
+
+The Facebook User ID can also be set in the test case spec itself:
+
+    #begin
+    UPDATE_CUSTOM FBWEBHOOK_USERID|66666666
+
 
 ### FBWEBHOOK_APPSECRET
 If your webhook is [validating](https://developers.facebook.com/docs/messenger-platform/webhook#security) the _X-Hub-Signature_-header (it should!), then you have to give the Facebook App Secret to Botium to be able to generate this signature (default: empty)

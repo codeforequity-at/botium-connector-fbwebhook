@@ -10,6 +10,7 @@ const Capabilities = {
   FBWEBHOOK_TIMEOUT: 'FBWEBHOOK_TIMEOUT',
   FBWEBHOOK_REDISURL: 'FBWEBHOOK_REDISURL',
   FBWEBHOOK_PAGEID: 'FBWEBHOOK_PAGEID',
+  FBWEBHOOK_USERID: 'FBWEBHOOK_USERID',
   FBWEBHOOK_APPSECRET: 'FBWEBHOOK_APPSECRET'
 }
 const Defaults = {
@@ -27,6 +28,7 @@ class BotiumConnectorFbWebhook {
     this.caps = caps
     this.redis = null
     this.facebookUserId = null
+    this.facebookPageId = null
   }
 
   Validate () {
@@ -46,12 +48,13 @@ class BotiumConnectorFbWebhook {
 
   async Start () {
     debug('Start called')
-    this.facebookUserId = randomize('0', 10)
+    this.facebookUserId = this.caps[Capabilities.FBWEBHOOK_USERID] || randomize('0', 10)
+    this.facebookPageId = this.caps[Capabilities.FBWEBHOOK_PAGEID]
     await this._subscribeRedis()
   }
 
   async UserSays (msg) {
-    debug('UserSays called')
+    debug(`UserSays called: ${JSON.stringify(_.omit(msg, 'conversation'), null, 2)}`)
     const msgData = {}
     if (msg.buttons && msg.buttons.length > 0 && (msg.buttons[0].text || msg.buttons[0].payload)) {
       msgData.sourceData = {
@@ -67,6 +70,15 @@ class BotiumConnectorFbWebhook {
         }
       }
     }
+    if (msg.FBWEBHOOK_PAGEID) {
+      this.facebookPageId = msg.FBWEBHOOK_PAGEID
+    }
+    if (msg.FBWEBHOOK_USERID && msg.FBWEBHOOK_USERID !== this.facebookUserId) {
+      await this._unsubscribeRedis()
+      this.facebookUserId = msg.FBWEBHOOK_USERID
+      await this._subscribeRedis()
+    }
+
     const userSaysData = await this._sendToBot(msgData)
     msg.sourceData = Object.assign(msg.sourceData || {}, userSaysData)
   }
@@ -75,6 +87,7 @@ class BotiumConnectorFbWebhook {
     debug('Stop called')
     await this._unsubscribeRedis()
     this.facebookUserId = null
+    this.facebookPageId = null
   }
 
   async Clean () {
@@ -200,7 +213,7 @@ class BotiumConnectorFbWebhook {
       if (!fbMsg.sender.id) fbMsg.sender.id = this.facebookUserId
 
       if (!fbMsg.recipient) fbMsg.recipient = {}
-      if (!fbMsg.recipient.id) fbMsg.recipient.id = this.caps[Capabilities.FBWEBHOOK_PAGEID]
+      if (!fbMsg.recipient.id) fbMsg.recipient.id = this.facebookPageId
 
       if (!fbMsg.delivery && !fbMsg.timestamp) fbMsg.timestamp = ts
 
@@ -226,7 +239,7 @@ class BotiumConnectorFbWebhook {
     }
 
     try {
-      debug(`Sending message to ${requestOptions.uri}`)
+      debug(`Sending message to ${requestOptions.uri}: ${JSON.stringify(msgContainer, null, 2)}`)
       const response = await request(requestOptions)
       return { fbWebhookRequest: msgContainer, fbWebhookResponse: response }
     } catch (err) {

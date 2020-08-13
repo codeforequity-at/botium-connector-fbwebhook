@@ -6,7 +6,7 @@
   },
   "botium": {
     "convodirs": [
-      "spec\\convo"
+      "spec/convo"
     ],
     "expandConvos": true,
     "expandUtterancesToConvos": false
@@ -14,6 +14,6 @@
   "devDependencies": {
     "botium-bindings": "latest",
     "botium-connector-fbwebhook": "../../",
-    "mocha": "^6.2.1"
+    "mocha": "latest"
   }
 }
