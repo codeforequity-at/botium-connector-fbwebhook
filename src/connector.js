@@ -1,14 +1,14 @@
-const Redis = require('ioredis')
-const _ = require('lodash')
-const randomize = require('randomatic')
-const request = require('request-promise-native')
+const util = require('util')
 const crypto = require('crypto')
+const randomize = require('randomatic')
 const debug = require('debug')('botium-connector-fbwebhook')
+
+const SimpleRestContainer = require('botium-core/src/containers/plugins/SimpleRestContainer')
+const { Capabilities: CoreCapabilities } = require('botium-core')
 
 const Capabilities = {
   FBWEBHOOK_WEBHOOKURL: 'FBWEBHOOK_WEBHOOKURL',
   FBWEBHOOK_TIMEOUT: 'FBWEBHOOK_TIMEOUT',
-  FBWEBHOOK_REDISURL: 'FBWEBHOOK_REDISURL',
   FBWEBHOOK_PAGEID: 'FBWEBHOOK_PAGEID',
   FBWEBHOOK_USERID: 'FBWEBHOOK_USERID',
   FBWEBHOOK_APPSECRET: 'FBWEBHOOK_APPSECRET'
@@ -18,15 +18,12 @@ const Defaults = {
   [Capabilities.FBWEBHOOK_TIMEOUT]: 10000
 }
 
-const getTs = () => {
-  return (new Date()).getTime()
-}
-
 class BotiumConnectorFbWebhook {
   constructor ({ queueBotSays, caps }) {
     this.queueBotSays = queueBotSays
     this.caps = caps
-    this.redis = null
+    this.delegateContainer = null
+    this.delegateCaps = null
     this.facebookUserId = null
     this.facebookPageId = null
   }
@@ -38,90 +35,89 @@ class BotiumConnectorFbWebhook {
 
     if (!this.caps[Capabilities.FBWEBHOOK_WEBHOOKURL]) throw new Error('FBWEBHOOK_WEBHOOKURL capability required')
 
-    return Promise.resolve()
-  }
-
-  async Build () {
-    debug('Build called')
-    await this._buildRedis()
-  }
-
-  async Start () {
-    debug('Start called')
     this.facebookUserId = this.caps[Capabilities.FBWEBHOOK_USERID] || randomize('0', 10)
     this.facebookPageId = this.caps[Capabilities.FBWEBHOOK_PAGEID]
-    await this._subscribeRedis()
-  }
 
-  async UserSays (msg) {
-    debug(`UserSays called: ${JSON.stringify(_.omit(msg, 'conversation'), null, 2)}`)
-    const msgData = {}
-    if (msg.buttons && msg.buttons.length > 0 && (msg.buttons[0].text || msg.buttons[0].payload)) {
-      msgData.sourceData = {
-        postback: {
-          title: msg.buttons[0].text,
-          payload: msg.buttons[0].payload || msg.buttons[0].text
-        }
-      }
-    } else {
-      msgData.sourceData = {
-        message: {
-          text: msg.messageText
-        }
-      }
-    }
-    if (msg.FBWEBHOOK_PAGEID) {
-      this.facebookPageId = msg.FBWEBHOOK_PAGEID
-    }
-    if (msg.FBWEBHOOK_USERID && msg.FBWEBHOOK_USERID !== this.facebookUserId) {
-      await this._unsubscribeRedis()
-      this.facebookUserId = msg.FBWEBHOOK_USERID
-      await this._subscribeRedis()
-    }
+    if (!this.delegateContainer) {
+      this.delegateCaps = {
+        [CoreCapabilities.SIMPLEREST_URL]: this.caps[Capabilities.FBWEBHOOK_WEBHOOKURL],
+        [CoreCapabilities.SIMPLEREST_METHOD]: 'POST',
+        [CoreCapabilities.SIMPLEREST_TIMEOUT]: this.caps[Capabilities.FBWEBHOOK_TIMEOUT],
+        [CoreCapabilities.SIMPLEREST_CONVERSATION_ID_TEMPLATE]: this.facebookUserId,
+        [CoreCapabilities.SIMPLEREST_BODY_TEMPLATE]:
+          `{
+            "object": "page",
+            "entry": [
+              {
+                "messaging": []
+              }
+            ]
+           }`,
+        [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: ({ requestOptions, msg, context }) => {
+          console.log('SADFadsfsadfsadf')
+          const body = requestOptions.body
+          body.entry[0].ts = Date.now()
+          body.entry[0].id = this.caps[Capabilities.FBWEBHOOK_PAGEID]
 
-    const userSaysData = await this._sendToBot(msgData)
-    msg.sourceData = Object.assign(msg.sourceData || {}, userSaysData)
-  }
-
-  async Stop () {
-    debug('Stop called')
-    await this._unsubscribeRedis()
-    this.facebookUserId = null
-    this.facebookPageId = null
-  }
-
-  async Clean () {
-    debug('Clean called')
-    await this._cleanRedis()
-  }
-
-  _buildRedis () {
-    return new Promise((resolve, reject) => {
-      this.redis = new Redis(this.caps[Capabilities.FBWEBHOOK_REDISURL])
-      this.redis.on('connect', () => {
-        debug(`Redis connected to ${JSON.stringify(this.caps[Capabilities.FBWEBHOOK_REDISURL] || 'default')}`)
-        resolve()
-      })
-      this.redis.on('message', (channel, event) => {
-        if (this.facebookUserId) {
-          if (!_.isString(event)) {
-            return debug(`WARNING: received non-string message from ${channel}, ignoring: ${event}`)
+          const msgData = {}
+          if (msg.buttons && msg.buttons.length > 0 && (msg.buttons[0].text || msg.buttons[0].payload)) {
+            msgData.sourceData = {
+              postback: {
+                title: msg.buttons[0].text,
+                payload: msg.buttons[0].payload || msg.buttons[0].text
+              }
+            }
+          } else {
+            msgData.sourceData = {
+              message: {
+                text: msg.messageText
+              }
+            }
           }
-          try {
-            event = JSON.parse(event)
-          } catch (err) {
-            return debug(`WARNING: received non-json message from ${channel}, ignoring: ${event}`)
-          }
-          if (!event.to || event.to !== this.facebookUserId) {
+
+          if (msgData.sourceData) {
+            body.entry[0].messaging.push(msgData.sourceData)
+          } else {
+            debug(`No sourceData given. Ignored. ${msgData}`)
             return
           }
 
-          const botMsg = { sender: 'bot', sourceData: event }
-          const fbMessage = event.body.message
+          body.entry[0].messaging.forEach((fbMsg) => {
+            if (!fbMsg.sender) fbMsg.sender = {}
+            if (!fbMsg.sender.id) fbMsg.sender.id = this.facebookUserId
 
+            if (!fbMsg.recipient) fbMsg.recipient = {}
+            if (!fbMsg.recipient.id) fbMsg.recipient.id = this.facebookPageId
+
+            if (!fbMsg.delivery && !fbMsg.timestamp) fbMsg.timestamp = Date.now()
+
+            if (fbMsg.message) {
+              if (!fbMsg.message.mid) fbMsg.message.mid = `mid.${randomize('0', 10)}`
+            }
+          })
+
+          let xHubSignature
+          if (this.caps[Capabilities.FBWEBHOOK_APPSECRET]) {
+            const hmac = crypto.createHmac('sha1', this.caps[Capabilities.FBWEBHOOK_APPSECRET])
+            hmac.update(JSON.stringify(body), 'utf8')
+            xHubSignature = 'sha1=' + hmac.digest('hex')
+          }
+          requestOptions.headers = Object.assign(requestOptions.headers || {}, {
+            'X-Hub-Signature': xHubSignature,
+            Botium: true
+          })
+        },
+        [CoreCapabilities.SIMPLEREST_RESPONSE_HOOK]: ({ botMsg }) => {
+          console.log('************SIMPLEREST_RESPONSE_HOOK')
+          debug(`Response Body: ${util.inspect(botMsg.sourceData, false, null, true)}`)
+          const fbMessage = botMsg.sourceData.message
           if (fbMessage) {
+            botMsg.buttons = botMsg.buttons || []
+            botMsg.media = botMsg.media || []
+            botMsg.cards = botMsg.cards || []
+
             if (fbMessage.text) {
-              botMsg.messageText = event.body.message.text
+              botMsg.messageText = fbMessage.text
             }
             if (fbMessage.quick_replies) {
               botMsg.buttons = botMsg.buttons || []
@@ -144,7 +140,10 @@ class BotiumConnectorFbWebhook {
                       image: element.image_url && {
                         mediaUri: element.image_url
                       },
-                      buttons: element.buttons && element.buttons.map(button => ({ text: button.title, payload: button.payload }))
+                      buttons: element.buttons && element.buttons.map(button => ({
+                        text: button.title,
+                        payload: button.payload
+                      }))
                     })
                   })
                   break
@@ -159,123 +158,44 @@ class BotiumConnectorFbWebhook {
                   })
                   break
                 default:
-                  // Types of attachment not supported list, media, receipt, airline_boardingpass
-                  debug(`WARNING: recieved unsupported message from ${channel}, ignoring ${event}`)
+                // Types of attachment not supported list, media, receipt, airline_boardingpass
+                  debug(`WARNING: recieved unsupported message: ${fbMessage}`)
               }
             }
-
-            debug(`Received a message to queue ${channel}: ${JSON.stringify(botMsg)}`)
-            setTimeout(() => this.queueBotSays(botMsg), 100)
           } else {
-            debug(`WARNING: recieved non message fb event from ${channel}, ignoring ${event}`)
+            debug('WARNING: recieved non message fb event')
           }
-
-          this._sendToBot({
-            sourceData: {
-              delivery: {
-                mids: [
-                  event.message_id
-                ],
-                watermark: getTs()
-              }
-            }
-          }).catch((err) => {
-            debug(`Sending delivery event failed, ignoring - ${err}`)
-          })
-        }
-      })
-    })
-  }
-
-  async _sendToBot (msg) {
-    const ts = getTs()
-
-    const msgContainer = {
-      object: 'page',
-      entry: [
-        {
-          id: this.caps[Capabilities.FBWEBHOOK_PAGEID],
-          time: ts,
-          messaging: []
-        }
-      ]
-    }
-
-    if (msg.sourceData) {
-      msgContainer.entry[0].messaging.push(msg.sourceData)
-    } else {
-      debug(`No sourceData given. Ignored. ${msg}`)
-      return
-    }
-
-    msgContainer.entry[0].messaging.forEach((fbMsg) => {
-      if (!fbMsg.sender) fbMsg.sender = {}
-      if (!fbMsg.sender.id) fbMsg.sender.id = this.facebookUserId
-
-      if (!fbMsg.recipient) fbMsg.recipient = {}
-      if (!fbMsg.recipient.id) fbMsg.recipient.id = this.facebookPageId
-
-      if (!fbMsg.delivery && !fbMsg.timestamp) fbMsg.timestamp = ts
-
-      if (fbMsg.message) {
-        if (!fbMsg.message.mid) fbMsg.message.mid = `mid.${randomize('0', 10)}`
+        },
+        [CoreCapabilities.SIMPLEREST_INBOUND_SELECTOR_JSONPATH]: '$.body.recipient.id',
+        [CoreCapabilities.SIMPLEREST_INBOUND_SELECTOR_VALUE]: '{{botium.conversationId}}'
       }
-    })
 
-    const requestOptions = {
-      uri: this.caps[Capabilities.FBWEBHOOK_WEBHOOKURL],
-      method: 'POST',
-      headers: { Botium: true },
-      body: msgContainer,
-      json: true,
-      timeout: this.caps[Capabilities.FBWEBHOOK_TIMEOUT]
+      debug(`Validate delegateCaps ${util.inspect(this.delegateCaps)}`)
+      this.delegateContainer = new SimpleRestContainer({ queueBotSays: this.queueBotSays, caps: this.delegateCaps })
     }
 
-    if (this.caps[Capabilities.FBWEBHOOK_APPSECRET]) {
-      var hmac = crypto.createHmac('sha1', this.caps[Capabilities.FBWEBHOOK_APPSECRET])
-      hmac.update(JSON.stringify(msgContainer), 'utf8')
-      const calculated = 'sha1=' + hmac.digest('hex')
-      requestOptions.headers['X-Hub-Signature'] = calculated
-    }
-
-    try {
-      debug(`Sending message to ${requestOptions.uri}: ${JSON.stringify(msgContainer, null, 2)}`)
-      const response = await request(requestOptions)
-      return { fbWebhookRequest: msgContainer, fbWebhookResponse: response }
-    } catch (err) {
-      throw new Error(`Failed sending message to ${requestOptions.uri}: ${err}`)
-    }
+    debug('Validate delegate')
+    return this.delegateContainer.Validate()
   }
 
-  _subscribeRedis () {
-    return new Promise((resolve, reject) => {
-      this.redis.subscribe(this.facebookUserId, (err, count) => {
-        if (err) {
-          return reject(new Error(`Redis failed to subscribe channel ${this.facebookUserId}: ${err}`))
-        }
-        debug(`Redis subscribed to ${count} channels. Listening for updates on the ${this.facebookUserId} channel.`)
-        resolve()
-      })
-    })
+  async Build () {
+    await this.delegateContainer.Build()
   }
 
-  _unsubscribeRedis () {
-    return new Promise((resolve, reject) => {
-      this.redis.unsubscribe(this.facebookUserId, (err) => {
-        if (err) {
-          return reject(new Error(`Redis failed to unsubscribe channel ${this.facebookUserId}: ${err}`))
-        }
-        debug(`Redis unsubscribed from ${this.facebookUserId} channel.`)
-        resolve()
-      })
-    })
+  async Start () {
+    await this.delegateContainer.Start()
   }
 
-  _cleanRedis () {
-    if (this.redis) {
-      this.redis.disconnect()
-      this.redis = null
-    }
+  async UserSays (msg) {
+    await this.delegateContainer.UserSays(msg)
+  }
+
+  async Stop () {
+    await this.delegateContainer.Stop()
+  }
+
+  async Clean () {
+    await this.delegateContainer.Clean()
   }
 }
 
