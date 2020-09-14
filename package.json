@@ -6,7 +6,8 @@
   "module": "dist/botium-connector-fbwebhook-es.js",
   "scripts": {
     "build": "npm run eslint && rollup -c",
-    "eslint": "eslint index.js src/**/*.js bin/**/*.js"
+    "eslint": "eslint index.js",
+    "eslint-fix": "eslint --fix index.js"
   },
   "repository": {
     "type": "git",
