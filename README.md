@@ -17,7 +17,8 @@ Botium emulates the [Facebook Messenger Platform](https://developers.facebook.co
 
 __Redis__ is used to connect the webhook to Botium scripts: all messages received over the webhook are published to Redis, and Botium on the other end subscribes to those Redis channels before running a conversation. 
 
-You have to setup your webhook to send outbound messages to the Botium Facebook Messenger Platform emulator endpoint instead of the real Facebook endpoint at https://graph.facebook.com. Depending on the technology you are using, there are several options to do this:
+You have to setup your webhook to send outbound messages to the endpoint started with `botium-cli inbound-proxy`
+ instead of the real Facebook endpoint at https://graph.facebook.com. Depending on the technology you are using, there are several options to do this:
 
 * If your technology allows to simply change the endpoint url, then this is the preferred way
 * If you are using Node.js, there is a demo in _samples/botkit-bot_ how to use [Nock](https://github.com/nock/nock) to intercept network traffic to the original Facebook endpoint
@@ -34,25 +35,6 @@ It can be used as any other Botium connector with all Botium Stack components:
 * a __Facebook Messenger Platform Webhook__
 * a __Redis__ instance (Cloud hosted free tier for example from [redislabs](https://redislabs.com/) will do as a starter)
 * a __project directory__ on your workstation to hold test cases and Botium configuration
-
-## Install and Run the Botium Facebook Messenger Platform emulator
-
-The Botium Facebook Messenger Platform emulator is responsible for the receiving part, listens for messages from your webhook, and puts them into Redis. It is running outside of Botium as a background service.
-
-You have to configure your Facebook webhook to deliver the outbound messages to the Botium Facebook Messenger Platform emulator. 
-
-Installation with NPM:
-
-    > npm install -g botium-connector-fbwebhook
-    > botium-fbwebhookproxy-cli start --help
-
-There are several options required for running the service:
-
-_--port_: Local port to listen
-
-_--endpoint_: endpoint (url part after the port ...) (optional, default _/_)
-
-_--redisurl_: Redis connection url
 
 ## Install Botium and Facebook Webhook Connector
 
@@ -89,14 +71,15 @@ Open the file _botium.json_ in your working directory and add the webhook url an
     "Capabilities": {
       "PROJECTNAME": "<whatever>",
       "CONTAINERMODE": "fbwebhook",
-      "FBWEBHOOK_WEBHOOKURL": "..."
+      "FBWEBHOOK_WEBHOOKURL": "...",
+      "SIMPLEREST_INBOUND_REDISURL": "redis://127.0.0.1:6379"
     }
   }
 }
 ```
 Botium setup is ready, you can begin to write your [BotiumScript](https://github.com/codeforequity-at/botium-core/wiki/Botium-Scripting) files.
 
-__Important: The Botium Facebook Messenger Platform emulator has to be running when Botium is started. Otherwise, Botium scripts will fail to receive any input or output messages from your chatbot!__
+__Important: The `inbound-proxy` command has to be started with Botium CLI. Otherwise, Botium scripts will fail to receive any input or output messages from your chatbot!__
 
 ## Running the Samples
 
@@ -104,11 +87,12 @@ The folder _samples/botkit-bot_ is an example for a simple Facebook Webhook chat
 
     > cd samples/botkit-bot && npm install && npm run start:botium
 
-Afterwards, start the Botium Facebook Messenger Platform emulator:
+Afterwards, start `inbound-proxy` command with [Botium CLI](https://github.com/codeforequity-at/botium-cli/):
 
-    > botium-fbwebhookproxy-cli start
+    > botium-cli inbound-proxy
 
-And finally, you can find the Botium test project in _samples/simple_, to run a simple test case
+And finally, you can find the Botium test project in _samples/simple_, to run a simple test case 
+(Check and set the corresponding capabilities in `botium.json` file)
 
     > cd samples/simple && npm install && npm test
 
@@ -141,11 +125,6 @@ The Facebook User ID can also be set in the test case spec itself:
 
 ### FBWEBHOOK_APPSECRET
 If your webhook is [validating](https://developers.facebook.com/docs/messenger-platform/webhook#security) the _X-Hub-Signature_-header (it should!), then you have to give the Facebook App Secret to Botium to be able to generate this signature (default: empty)
-
-### FBWEBHOOK_REDISURL
-The url of your Redis instance - for example _redis://127.0.0.1:6379_.
-
-Or a Redis options object - see [here](https://github.com/luin/ioredis#connect-to-redis)
 
 ## Open Issues and Restrictions
 

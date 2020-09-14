@@ -1,12 +1,9 @@
 {
   "name": "botium-connector-fbwebhook",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Botium Connector for Facebook Webhooks",
   "main": "dist/botium-connector-fbwebhook-cjs.js",
   "module": "dist/botium-connector-fbwebhook-es.js",
-  "bin": {
-    "botium-fbwebhookproxy-cli": "./bin/botium-fbwebhookproxy-cli.js"
-  },
   "scripts": {
     "build": "npm run eslint && rollup -c",
     "eslint": "eslint index.js src/**/*.js bin/**/*.js"
