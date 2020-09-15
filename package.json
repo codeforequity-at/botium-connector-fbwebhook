@@ -40,14 +40,7 @@
     "@babel/runtime": "^7.6.2",
     "body-parser": "^1.19.0",
     "debug": "^4.1.1",
-    "express": "^4.17.1",
-    "ioredis": "^4.17.3",
-    "lodash": "^4.17.19",
-    "randomatic": "^3.1.1",
-    "request": "^2.88.2",
-    "request-promise-native": "^1.0.9",
-    "uuid": "^8.3.0",
-    "yargs": "^15.4.1"
+    "randomatic": "^3.1.1"
   },
   "peerDependencies": {
     "botium-core": ">= 1.9.10"

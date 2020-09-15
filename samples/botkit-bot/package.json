@@ -15,6 +15,7 @@
     "dotenv": "^8.2.0"
   },
   "devDependencies": {
-    "nock": "^13.0.4"
+    "nock": "^13.0.4",
+    "request": "^2.88.2"
   }
 }

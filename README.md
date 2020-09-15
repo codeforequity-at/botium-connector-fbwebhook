@@ -83,18 +83,21 @@ __Important: The `inbound-proxy` command has to be started with Botium CLI. Othe
 
 ## Running the Samples
 
-The folder _samples/botkit-bot_ is an example for a simple Facebook Webhook chatbot - it is one of the samples of [Botkit](https://github.com/howdyai/botkit). Start the webhook:
+Install botium-core as peerDependency 
+
+    > npm install --no-save botium-core
+
+Afterward in the folder _samples/botkit-bot_ there is an example for a simple Facebook Webhook chatbot - it is one of the samples of [Botkit](https://github.com/howdyai/botkit). Start the webhook:
 
     > cd samples/botkit-bot && npm install && npm run start:botium
 
-Afterwards, start `inbound-proxy` command with [Botium CLI](https://github.com/codeforequity-at/botium-cli/):
+Finally navigate into the samples/simple and run `npm install`, start the inbound proxy server 
+and run the test itself with the following commands:
 
-    > botium-cli inbound-proxy
-
-And finally, you can find the Botium test project in _samples/simple_, to run a simple test case 
-(Check and set the corresponding capabilities in `botium.json` file)
-
-    > cd samples/simple && npm install && npm test
+     > cd samples/simple
+     > npm install
+     > npm run inbound
+     > npm test
 
 ## Supported Capabilities
 
