@@ -66,7 +66,13 @@ class BotiumConnectorFbWebhook {
                 payload: msg.buttons[0].payload || msg.buttons[0].text
               }
             }
-          } else {
+          } 
+          else if (msg.referral) {
+            msgData.sourceData = {
+              referral: msg.referral
+            }
+          }
+          else {
             msgData.sourceData = {
               message: {
                 text: msg.messageText
