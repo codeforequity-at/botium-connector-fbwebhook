@@ -136,7 +136,7 @@ class BotiumConnectorFbWebhook {
             }
             if (fbMessage.quick_replies) {
               botMsg.buttons = botMsg.buttons || []
-              fbMessage.quick_replies.map(qr => {
+              fbMessage.quick_replies.forEach(qr => {
                 botMsg.buttons.push({
                   text: qr.title,
                   payload: qr.payload
@@ -148,7 +148,7 @@ class BotiumConnectorFbWebhook {
               switch (attachment.template_type) {
                 case 'generic':
                   botMsg.cards = botMsg.cards || []
-                  attachment.elements.map(element => {
+                  attachment.elements.forEach(element => {
                     botMsg.cards.push({
                       text: element.title,
                       subtext: element.subtitle,
@@ -165,7 +165,7 @@ class BotiumConnectorFbWebhook {
                 case 'button':
                   botMsg.messageText = attachment.text
                   botMsg.buttons = botMsg.buttons || []
-                  attachment.buttons.map(button => {
+                  attachment.buttons.forEach(button => {
                     botMsg.buttons.push({
                       text: button.title,
                       payload: button.payload
