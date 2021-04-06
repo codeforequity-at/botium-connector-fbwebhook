@@ -1,4 +1,5 @@
 const util = require('util')
+const _ = require('lodash')
 const crypto = require('crypto')
 const randomize = require('randomatic')
 const debug = require('debug')('botium-connector-fbwebhook')
@@ -53,10 +54,16 @@ class BotiumConnectorFbWebhook {
               }
             ]
            }`,
-        [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: ({ requestOptions, msg, context }) => {
+        [CoreCapabilities.SIMPLEREST_REQUEST_HOOK]: ({ requestOptions, msg, botium }) => {
+          if (msg.FBWEBHOOK_USERID) {
+            botium.conversationId = msg.FBWEBHOOK_USERID
+          }
+
           const body = requestOptions.body
           body.entry[0].ts = Date.now()
           body.entry[0].id = this.caps[Capabilities.FBWEBHOOK_PAGEID]
+
+          console.log('request hook', msg, botium)
 
           const msgData = {}
           if (msg.buttons && msg.buttons.length > 0 && (msg.buttons[0].text || msg.buttons[0].payload)) {
@@ -64,6 +71,18 @@ class BotiumConnectorFbWebhook {
               postback: {
                 title: msg.buttons[0].text,
                 payload: msg.buttons[0].payload || msg.buttons[0].text
+              }
+            }
+          } else if (msg.SET_FB_REFERRAL) {
+            msgData.sourceData = {
+              referral: msg.SET_FB_REFERRAL
+            }
+          } else if (msg.SET_FB_REFERRAL_MME) {
+            msgData.sourceData = {
+              referral: {
+                ref: _.isString(msg.SET_FB_REFERRAL_MME) ? msg.SET_FB_REFERRAL_MME : JSON.stringify(msg.SET_FB_REFERRAL_MME),
+                source: 'SHORTLINK',
+                type: 'OPEN_THREAD'
               }
             }
           } else {
@@ -83,10 +102,10 @@ class BotiumConnectorFbWebhook {
 
           body.entry[0].messaging.forEach((fbMsg) => {
             if (!fbMsg.sender) fbMsg.sender = {}
-            if (!fbMsg.sender.id) fbMsg.sender.id = this.facebookUserId
+            if (!fbMsg.sender.id) fbMsg.sender.id = msg.FBWEBHOOK_USERID || this.facebookUserId
 
             if (!fbMsg.recipient) fbMsg.recipient = {}
-            if (!fbMsg.recipient.id) fbMsg.recipient.id = this.facebookPageId
+            if (!fbMsg.recipient.id) fbMsg.recipient.id = msg.FBWEBHOOK_PAGEID || this.facebookPageId
 
             if (!fbMsg.delivery && !fbMsg.timestamp) fbMsg.timestamp = Date.now()
 
@@ -161,7 +180,7 @@ class BotiumConnectorFbWebhook {
               }
             }
           } else {
-            debug('WARNING: recieved non message fb event')
+            debug('WARNING: received non message fb event')
           }
         },
         [CoreCapabilities.SIMPLEREST_INBOUND_SELECTOR_JSONPATH]: '$.body.recipient.id',
