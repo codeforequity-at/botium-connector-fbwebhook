@@ -4,3 +4,4 @@ Referral m.me
 UPDATE_CUSTOM SET_FB_REFERRAL_MME|some referer parameter
 
 #bot
+Got referral: some referer parameter

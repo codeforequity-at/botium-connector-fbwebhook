@@ -4,3 +4,4 @@ Referral Ads
 UPDATE_CUSTOM SET_FB_REFERRAL|{"ref": "<REF_DATA_IF_SPECIFIED_IN_THE_AD>", "ad_id": "<ID_OF_THE_AD>", "source": "ADS", "type": "OPEN_THREAD", "ads_context_data": {"ad_title": "<TITLE_OF_THE_AD>", "photo_url": "<URL_OF_THE_IMAGE_FROM_AD_THE_USER_IS_INTERESTED_IN>", "video_url": "<THUMBNAIL_URL_OF_THE_VIDEO_FROM_THE_AD>", "post_id": "<ID_OF_THE_POST>"}}
 
 #bot
+Got referral: <REF_DATA_IF_SPECIFIED_IN_THE_AD>

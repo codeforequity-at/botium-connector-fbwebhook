@@ -63,8 +63,6 @@ class BotiumConnectorFbWebhook {
           body.entry[0].ts = Date.now()
           body.entry[0].id = this.caps[Capabilities.FBWEBHOOK_PAGEID]
 
-          console.log('request hook', msg, botium)
-
           const msgData = {}
           if (msg.buttons && msg.buttons.length > 0 && (msg.buttons[0].text || msg.buttons[0].payload)) {
             msgData.sourceData = {
