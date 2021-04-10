@@ -81,6 +81,20 @@ Botium setup is ready, you can begin to write your [BotiumScript](https://github
 
 __Important: The `inbound-proxy` command has to be started with Botium CLI. Otherwise, Botium scripts will fail to receive any input or output messages from your chatbot!__
 
+### Facebook Referrals
+
+For simulating referral parameters (see [Facebook Docs](https://developers.facebook.com/docs/messenger-platform/reference/webhook-events/messaging_referrals)), the _UPDATE_CUSTOM_ logic hook can be used.
+
+Simulating an _m.me_-link with a referral parameter:
+
+    #me
+    UPDATE_CUSTOM SET_FB_REFERRAL_MME|some referral parameter
+
+Simulating another referral type by specifying JSON code:
+
+    #me
+    UPDATE_CUSTOM SET_FB_REFERRAL|{"ref": "<REF_DATA_IF_SPECIFIED_IN_THE_AD>", "ad_id": "<ID_OF_THE_AD>", "source": "ADS", "type": "OPEN_THREAD", "ads_context_data": {"ad_title": "<TITLE_OF_THE_AD>", "photo_url": "<URL_OF_THE_IMAGE_FROM_AD_THE_USER_IS_INTERESTED_IN>", "video_url": "<THUMBNAIL_URL_OF_THE_VIDEO_FROM_THE_AD>", "post_id": "<ID_OF_THE_POST>"}}
+
 ## Running the Samples
 
 Install botium-core as peerDependency 
@@ -124,7 +138,6 @@ The Facebook User ID can also be set in the test case spec itself:
 
     #begin
     UPDATE_CUSTOM FBWEBHOOK_USERID|66666666
-
 
 ### FBWEBHOOK_APPSECRET
 If your webhook is [validating](https://developers.facebook.com/docs/messenger-platform/webhook#security) the _X-Hub-Signature_-header (it should!), then you have to give the Facebook App Secret to Botium to be able to generate this signature (default: empty)
